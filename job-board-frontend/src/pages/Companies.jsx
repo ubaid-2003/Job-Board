@@ -6,6 +6,7 @@ const Companies = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch companies from backend
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -22,11 +23,13 @@ const Companies = () => {
     fetchCompanies();
   }, []);
 
+  // Filter companies
   const filteredCompanies = companies.filter(company =>
     company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Show loader
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -38,7 +41,8 @@ const Companies = () => {
   return (
     <div className="min-h-screen px-4 py-8 bg-gray-50 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Header and Search */}
+
+        {/* Page Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
             Explore Companies
@@ -64,6 +68,90 @@ const Companies = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Company Registration Form */}
+        <div className="p-6 mb-12 bg-white rounded-lg shadow">
+          <h2 className="mb-4 text-2xl font-semibold text-gray-800">Register Your Company</h2>
+          <form
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const payload = Object.fromEntries(formData.entries());
+              payload.agreeToTerms = formData.get("agreeToTerms") === "on";
+              payload.sendEmails = formData.get("sendEmails") === "on";
+
+              try {
+                const response = await fetch("http://localhost:5000/companies", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+
+                const result = await response.json();
+                alert("Company registered successfully!");
+
+                // Update list
+                setCompanies(prev => [...prev, result]);
+                e.target.reset();
+              } catch (error) {
+                console.error("Error registering company:", error);
+                alert("Failed to register company.");
+              }
+            }}
+          >
+            <input
+              type="text"
+              name="companyName"
+              placeholder="Company Name"
+              required
+              className="p-2 border rounded"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Company Email"
+              required
+              className="p-2 border rounded"
+            />
+            <input
+              type="text"
+              name="website"
+              placeholder="Website (optional)"
+              className="p-2 border rounded"
+            />
+            <input
+              type="text"
+              name="logo"
+              placeholder="Logo URL (optional)"
+              className="p-2 border rounded"
+            />
+            <textarea
+              name="description"
+              placeholder="Company Description"
+              className="p-2 border rounded sm:col-span-2"
+            ></textarea>
+            <textarea
+              name="additionalInfo"
+              placeholder="Additional Info (optional)"
+              className="p-2 border rounded sm:col-span-2"
+            ></textarea>
+            <label className="flex items-center gap-2 sm:col-span-2">
+              <input type="checkbox" name="agreeToTerms" required />
+              I agree to the terms and conditions
+            </label>
+            <label className="flex items-center gap-2 sm:col-span-2">
+              <input type="checkbox" name="sendEmails" />
+              Receive email updates
+            </label>
+            <button
+              type="submit"
+              className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 sm:col-span-2"
+            >
+              Register Company
+            </button>
+          </form>
         </div>
 
         {/* Companies Grid */}
@@ -123,8 +211,6 @@ const Companies = () => {
             ))}
           </div>
         )}
-
-
       </div>
     </div>
   );
